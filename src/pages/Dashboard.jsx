@@ -1,7 +1,32 @@
-import IncidentMap from "../components/IncidentMap";
+import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import IncidentMap from "../components/IncidentMap";
+import API from "../services/api";
 
 function Dashboard() {
+  const [incidents, setIncidents] = useState([]);
+
+  useEffect(() => {
+    fetchIncidents();
+  }, []);
+
+  const fetchIncidents = async () => {
+    try {
+      const response = await API.get("/incidents");
+      setIncidents(response.data);
+    } catch (error) {
+      console.error("Error fetching incidents:", error);
+    }
+  };
+
+  const highSeverityCount = incidents.filter(
+    (incident) => incident.severityScore >= 7
+  ).length;
+
+  const activeAlertsCount = incidents.filter(
+    (incident) => incident.status === "ACTIVE"
+  ).length;
+
   return (
     <>
       <Navbar />
@@ -14,17 +39,23 @@ function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-xl shadow p-6">
             <h2 className="text-gray-500">Total Incidents</h2>
-            <p className="text-3xl font-bold">12</p>
+            <p className="text-3xl font-bold">
+              {incidents.length}
+            </p>
           </div>
 
           <div className="bg-white rounded-xl shadow p-6">
             <h2 className="text-gray-500">High Severity</h2>
-            <p className="text-3xl font-bold text-red-600">4</p>
+            <p className="text-3xl font-bold text-red-600">
+              {highSeverityCount}
+            </p>
           </div>
 
           <div className="bg-white rounded-xl shadow p-6">
             <h2 className="text-gray-500">Active Alerts</h2>
-            <p className="text-3xl font-bold text-yellow-600">3</p>
+            <p className="text-3xl font-bold text-yellow-600">
+              {activeAlertsCount}
+            </p>
           </div>
         </div>
 
@@ -43,40 +74,27 @@ function Dashboard() {
             </thead>
 
             <tbody>
-              <tr className="border-b">
-                <td className="py-3">Flood</td>
-                <td>MG Road</td>
-                <td>
-                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded">
-                    High
-                  </span>
-                </td>
-              </tr>
+              {incidents.map((incident) => (
+                <tr key={incident.id} className="border-b">
+                  <td className="py-3">
+                    {incident.category}
+                  </td>
 
-              <tr className="border-b">
-                <td className="py-3">Accident</td>
-                <td>Airport Road</td>
-                <td>
-                  <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
-                    Medium
-                  </span>
-                </td>
-              </tr>
+                  <td>
+                    {incident.location}
+                  </td>
 
-              <tr>
-                <td className="py-3">Fire</td>
-                <td>Market Area</td>
-                <td>
-                  <span className="bg-red-100 text-red-700 px-2 py-1 rounded">
-                    High
-                  </span>
-                </td>
-              </tr>
+                  <td>
+                    <span className="bg-red-100 text-red-700 px-2 py-1 rounded">
+                      {incident.severityScore}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
 
-        {/* Crisis Map */}
         <div className="bg-white rounded-xl shadow p-6 mt-6">
           <h2 className="text-2xl font-semibold mb-4">
             Crisis Map
